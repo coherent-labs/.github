@@ -87,6 +87,14 @@ class Check(unittest.TestCase):
         body = replace(GOOD, "## Change\n", "## Change\n" + padding)
         self.assertEqual(pr_body.problems(body), [])
 
+    def test_a_bot_appended_footer_does_not_count(self):
+        footer = (
+            "\n<!-- codesmith:footer -->\n---\n<a href=\"https://app.blacksmith.sh\">"
+            + "x" * 1500
+            + "</a>\n<!-- codesmith:autofix:disabled -->\n<!-- /codesmith:footer -->\n"
+        )
+        self.assertEqual(pr_body.problems(GOOD + footer), [])
+
     def test_a_long_proof_fails(self):
         body = replace(GOOD, "new test red at base.", "new test red at base. " + "y" * 400)
         self.assertTrue(any(p.startswith("## Proof is ") and p.endswith("over 400") for p in pr_body.problems(body)))
