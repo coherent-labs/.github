@@ -6,7 +6,9 @@
     ## Proof    verdicts, not logs
     ## Risk     what could break, how we'd notice, how to roll back
 
-HTML comments (the template's hints) and the Claude Code attribution line do not count.
+HTML comments (the template's hints), the Claude Code attribution line and a bot's footer
+(`<!-- codesmith:footer -->` ... `<!-- /codesmith:footer -->`, which Blacksmith appends) do
+not count.
 The `pr-body-exempt` label, which only a person applies, skips every rule. Standard library only.
 
     PR_BODY=... PR_LABELS='[{"name": ...}]' pr_body.py
@@ -26,6 +28,7 @@ MAX_BLOCK_LINES = 5
 EXEMPT = "pr-body-exempt"
 TEMPLATE = "https://github.com/coherent-labs/.github/blob/main/.github/pull_request_template.md"
 
+FOOTER = re.compile(r"<!-- (\w+):footer -->.*?<!-- /\1:footer -->", re.S)
 COMMENT = re.compile(r"<!--.*?-->", re.S)
 ATTRIBUTION = re.compile(r"^.*Generated with \[Claude Code\].*$", re.M)
 HEADING = re.compile(r"^## +(.+?)\s*$", re.M)
@@ -34,7 +37,8 @@ FENCE = re.compile(r"^```[^\n]*\n(.*?)^```", re.S | re.M)
 
 
 def visible(body: str) -> str:
-    return ATTRIBUTION.sub("", COMMENT.sub("", body.replace("\r\n", "\n"))).strip()
+    text = FOOTER.sub("", body.replace("\r\n", "\n"))
+    return ATTRIBUTION.sub("", COMMENT.sub("", text)).strip()
 
 
 def sections(text: str) -> list[tuple[str, str]]:
